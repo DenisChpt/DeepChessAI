@@ -8,9 +8,10 @@ import json
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
+import pygame
 
 from modules.ChessEnv import ChessEnv
-from modules.Agent import ChessAgent, DQNAgent
+from modules.Agent import ChessAgent, DQNAgent, QNetwork
 from modules.Move import Move
 from modules.ChessBoard import PieceColor
 
@@ -294,10 +295,10 @@ class Trainer:
 				
 				# Stocker l'expérience
 				agent.remember(
-					DQNAgent.prepareInput(state),
+					QNetwork.prepareInput(state),
 					action,
 					reward,
-					DQNAgent.prepareInput(nextState),
+					QNetwork.prepareInput(nextState),
 					done
 				)
 				
@@ -531,7 +532,7 @@ class Trainer:
 				self.stats = json.load(f)
 	
 	def playAgainstHuman(self, agent: Union[ChessAgent, DQNAgent], 
-						 playerColor: PieceColor = PieceColor.WHITE) -> None:
+						playerColor: PieceColor = PieceColor.WHITE) -> None:
 		"""
 		Permet à un humain de jouer contre l'agent.
 		
@@ -546,7 +547,7 @@ class Trainer:
 		
 		print("\n=== JEU D'ÉCHECS CONTRE L'IA ===")
 		print(f"Vous jouez les {'blancs' if playerColor == PieceColor.WHITE else 'noirs'}")
-		print("Entrez vos coups en notation algébrique (ex: e2e4)")
+		print("Entrez vos coups en notation algébrique (ex: e2e4) ou utilisez la souris")
 		print("Tapez 'exit' pour quitter\n")
 		
 		# Désactiver l'exploration pour DQN
@@ -555,16 +556,29 @@ class Trainer:
 			original_epsilon = agent.epsilon
 			agent.epsilon = 0.0
 		
+		clock = pygame.time.Clock()
+		
 		while not done:
 			# Afficher le plateau
 			env.render()
 			
 			currentPlayer = env.board.currentPlayer
 			
+			# Traiter les événements pygame pour obtenir l'interaction souris
+			if env.visualizer:
+				move_from_mouse = env.visualizer.processEvents(env.board)
+				if move_from_mouse:
+					# Si un coup a été sélectionné avec la souris, le jouer
+					if env.board.isLegalMove(move_from_mouse):
+						observation, reward, done, truncated, info = env.step(move_from_mouse)
+						print(f"Coup joué: {move_from_mouse.toAlgebraic()}")
+						continue
+			
 			# Tour du joueur humain
 			if currentPlayer == playerColor:
-				valid_move = False
-				while not valid_move:
+				# Vérifier s'il y a une entrée utilisateur dans le terminal (non bloquant)
+				import sys, select
+				if select.select([sys.stdin,],[],[],0.0)[0]:
 					move_str = input("\nVotre coup: ")
 					
 					if move_str.lower() == 'exit':
@@ -578,12 +592,15 @@ class Trainer:
 						# Vérifier si le coup est légal
 						if env.board.isLegalMove(move):
 							observation, reward, done, truncated, info = env.step(move)
-							valid_move = True
 							print(f"Coup joué: {move_str}")
 						else:
 							print("Coup illégal. Réessayez.")
 					except ValueError:
 						print("Format invalide. Utilisez la notation algébrique (ex: e2e4).")
+				
+				# Permettre à pygame de continuer à traiter les événements
+				clock.tick(30)
+				continue
 			
 			# Tour de l'IA
 			else:
@@ -605,6 +622,9 @@ class Trainer:
 				observation, reward, done, truncated, info = env.step(move)
 				
 				print(f"L'IA joue: {move.toAlgebraic()}")
+			
+			# Permettre à pygame de continuer à traiter les événements
+			clock.tick(30)
 			
 			# Vérifier les conditions de fin
 			if done:

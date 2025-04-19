@@ -358,10 +358,33 @@ class QNetwork(nn.Module):
 		Prépare l'état du plateau pour l'entrée du réseau.
 		
 		Args:
-			boardState: État du plateau [8, 8, 19]
+			boardState: État du plateau [?, ?, ?]
 			
 		Returns:
 			np.ndarray: État préparé [19, 8, 8] (format PyTorch)
 		"""
-		# Réorganiser les dimensions pour PyTorch: [H, W, C] -> [C, H, W]
-		return np.transpose(boardState, (2, 0, 1))
+		# Vérifions la forme de l'entrée
+		if boardState.shape == (19, 8, 8):
+			# Déjà dans le bon format, pas besoin de transposer
+			return boardState
+		elif boardState.shape == (8, 8, 19):
+			# Format [H, W, C] -> [C, H, W]
+			return np.transpose(boardState, (2, 0, 1))
+		elif boardState.shape == (8, 19, 8):
+			# Déjà transposé, mais incorrectement - corrigeons
+			return np.transpose(boardState, (1, 0, 2))
+		else:
+			# Format inconnu, essayons de le diagnostiquer
+			print(f"Forme inattendue du boardState: {boardState.shape}")
+			# Tentons de mettre les canaux en premier
+			if 19 in boardState.shape:
+				# Trouver l'indice des canaux
+				channel_idx = boardState.shape.index(19)
+				# Créer une liste de permutation pour mettre les canaux en premier
+				perm = list(range(len(boardState.shape)))
+				perm.remove(channel_idx)
+				perm.insert(0, channel_idx)
+				return np.transpose(boardState, perm)
+			else:
+				# Impossible de déterminer, retournons tel quel
+				return boardState

@@ -217,7 +217,7 @@ class ChessEnv(gym.Env):
 			# Initialiser le visualiseur si nécessaire
 			if self.visualizer is None:
 				try:
-					from Visualizer import ChessVisualizer
+					from modules.Visualizer import ChessVisualizer
 					self.visualizer = ChessVisualizer(mode == 'human')
 				except ImportError:
 					print("Visualiseur non disponible. Veuillez installer pygame.")

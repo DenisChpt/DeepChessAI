@@ -49,12 +49,12 @@ class ChessVisualizer:
 			# Initialisation minimale pour le rendu non interactif
 			pygame.init()
 			self.screen = pygame.Surface((windowSize, windowSize))
+
+		# Police pour les légendes
+		self.font = pygame.font.SysFont('Arial', 14)
 		
 		# Charger les images
 		self.pieceImages = self._loadPieceImages()
-		
-		# Police pour les légendes
-		self.font = pygame.font.SysFont('Arial', 14)
 	
 	def _loadPieceImages(self) -> Dict:
 		"""
@@ -66,25 +66,25 @@ class ChessVisualizer:
 		images = {}
 		
 		# Chemin vers le dossier des pièces
-		piecesDir = os.path.join(os.path.dirname(__file__), 'assets', 'pieces')
+		piecesDir = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'assets', 'pieces')
 		
 		# Créer le dossier s'il n'existe pas
 		os.makedirs(piecesDir, exist_ok=True)
 		
 		# Vérifier si les pièces existent, sinon utiliser des formes simples
 		pieceFiles = {
-			(PieceColor.WHITE, PieceType.PAWN): "wp.png",
-			(PieceColor.WHITE, PieceType.KNIGHT): "wn.png",
-			(PieceColor.WHITE, PieceType.BISHOP): "wb.png",
-			(PieceColor.WHITE, PieceType.ROOK): "wr.png",
-			(PieceColor.WHITE, PieceType.QUEEN): "wq.png",
-			(PieceColor.WHITE, PieceType.KING): "wk.png",
-			(PieceColor.BLACK, PieceType.PAWN): "bp.png",
-			(PieceColor.BLACK, PieceType.KNIGHT): "bn.png",
-			(PieceColor.BLACK, PieceType.BISHOP): "bb.png",
-			(PieceColor.BLACK, PieceType.ROOK): "br.png",
-			(PieceColor.BLACK, PieceType.QUEEN): "bq.png",
-			(PieceColor.BLACK, PieceType.KING): "bk.png",
+			(PieceColor.WHITE, PieceType.PAWN): "white_pawn.png",
+			(PieceColor.WHITE, PieceType.KNIGHT): "white_knight.png",
+			(PieceColor.WHITE, PieceType.BISHOP): "white_bishop.png",
+			(PieceColor.WHITE, PieceType.ROOK): "white_rook.png",
+			(PieceColor.WHITE, PieceType.QUEEN): "white_queen.png",
+			(PieceColor.WHITE, PieceType.KING): "white_king.png",
+			(PieceColor.BLACK, PieceType.PAWN): "black_pawn.png",
+			(PieceColor.BLACK, PieceType.KNIGHT): "black_knight.png",
+			(PieceColor.BLACK, PieceType.BISHOP): "black_bishop.png",
+			(PieceColor.BLACK, PieceType.ROOK): "black_rook.png",
+			(PieceColor.BLACK, PieceType.QUEEN): "black_queen.png",
+			(PieceColor.BLACK, PieceType.KING): "black_king.png",
 		}
 		
 		imagesPresent = all(os.path.exists(os.path.join(piecesDir, file)) for file in pieceFiles.values())
